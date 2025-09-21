@@ -1,0 +1,8 @@
+En equipos, hacer una aplicación que:
+
+    Abra el archivo de entrada llamado "orders.txt", lo lea y almacene los datos en vectores o arreglos. Es valido crear objetos. El archivo se encuentra en Teams, clase 10).
+    Ordena la información por fecha para la realización de las búsquedas. 
+    Despliega los primeros 10 registros en pantalla y almacena en un archivo salida.txt el resultado del ordenamiento completo. 
+    Solicita al usuario las fechas de inicio y fin de búsqueda de información. 
+    Despliega los registros correspondientes a esas fechas. Toma en cuenta que si no hay coincidencias exactas para inicio y fin de todas formas debes devolver registros dentro del rango. 
+    Despliegue en pantalla el resultado de las búsquedas, y de al usuario la opción de guardarlo en un archivo.
