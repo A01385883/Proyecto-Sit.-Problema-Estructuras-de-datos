@@ -1,133 +1,131 @@
-
 #include <iostream>
 #include <string>
-#include <algorithm> // para sort de los meses a numeros
+#include <fstream>
+#include <sstream>
+using namespace std;
 
-using std::cout;
-using std::cin;
-using std::endl;
-using std::string;
-using std::to_string;
-
-//Clase Orden
-class Orden{
+// Clase Orden 
+class Orden {
 private:
-  string Mes;
-  int Dia;
-  int Hora;
-  int Minuto;
-  int Segundos;
-  string Restaurante;
-  int Costo;
+    string Mes;
+    int Dia;
+    int Hora;
+    int Minuto;
+    int Segundos;
+    string Restaurante;
+    string Pedido;
+    int Costo;
 
 public:
-//Default Constructor
-Orden(){
-  this->Mes = "ene";
-  this->Dia = 01;
-  this->Hora = 01;
-  this->Minuto = 01;
-  this->Segundos = 01;
-  this->Restaurante = "Cafeteria Tec";
-  this->Costo = 100;
-}
-  Orden(string Mes, int Dia, int Hora, int Minuto, int Segundos, string Restaurante, int Costo){
-    this -> Mes = Mes;
-    this -> Dia = Dia;
-    this -> Hora = Hora;
-    this -> Minuto = Minuto;
-    this -> Segundos = Segundos;
-    this -> Restaurante = Restaurante;
-    this -> Costo = Costo;
-  }
+    Orden() {
+        Mes = "ene";
+        Dia = 1;
+        Hora = 1;
+        Minuto = 1;
+        Segundos = 1;
+        Restaurante = "Cafeteria Tec";
+        Pedido = "Sandwich";
+        Costo = 100;
+    }
 
-//Mosrtrar Orden
-string show(){
-  return "Mes: " + Mes + "\nDia: " + to_string(Dia) + "\nHora: " + to_string(Hora) + "\nMinuto: " + to_string(Minuto) +"Segundos: " + to_string(Segundos) + "\nRestaurante: " + Restaurante + "\nCosto: " + to_string(Costo);}
+    Orden(string Mes, int Dia, int Hora, int Minuto, int Segundos, string Restaurante, string Pedido, int Costo) {
+        this->Mes = Mes;
+        this->Dia = Dia;
+        this->Hora = Hora;
+        this->Minuto = Minuto;
+        this->Segundos = Segundos;
+        this->Restaurante = Restaurante;
+        this->Pedido = Pedido;
+        this->Costo = Costo;
+    }
 
-//Sobrecarga Operadores
-bool operator<(const Orden & otro){
-  return this->Costo < otro.Costo;
-}
+    string show() {
+        return "Mes: " + Mes +
+               "\nDia: " + to_string(Dia) +
+               "\nHora: " + to_string(Hora) +
+               "\nMinuto: " + to_string(Minuto) +
+               "\nSegundos: " + to_string(Segundos) +
+               "\nRestaurante: " + Restaurante +
+               "\nPedido: " + Pedido +
+               "\nCosto: " + to_string(Costo) + "\n";
+    }
 
+    bool operator<(const Orden &otro) {
+        return this->Costo < otro.Costo;
+    }
 };
 
-/*Algoritmo Quick Sort:
-Su peor caso es un Big de (N^2) en caso de que todos
-los elementos esten ordenados, pero normalmente su caso comun
-es de O(n*log(n))*/
+// Lectura del archivo 
+int leerOrdenes(const string &filename, Orden ordenes[], int maxOrdenes) {
+    ifstream archivo(filename);
+    if (!archivo.is_open()) {
+        cerr << "Error al abrir archivo\n";
+        return 0;
+    }
 
-int partition(Orden *A, int low, int high, bool asc=true) {
-    Orden pivot = A[high]; // pivote al final
-    int i = low - 1;
+    string linea;
+    int count = 0;
 
-    for (int j = low; j <= high - 1; j++) {
-        if (asc ? (A[j] < pivot) : (pivot < A[j])) {
-            i++;
-            Orden aux = A[i];
-            A[i] = A[j];
-            A[j] = aux;
+    while (getline(archivo, linea) && count < maxOrdenes) {
+        stringstream ss(linea);
+
+        string mes;
+        int dia;
+        string tiempo; // "19:39:45"
+
+        // 1) Obtener mes, día y tiempo
+        ss >> mes >> dia >> tiempo;
+
+        // 2) Separar tiempo en hora:minuto:segundos
+        int hora, minuto, segundos;
+        size_t p1 = tiempo.find(':');
+        size_t p2 = tiempo.find(':', p1 + 1);
+
+        hora = stoi(tiempo.substr(0, p1));
+        minuto = stoi(tiempo.substr(p1 + 1, p2 - p1 - 1));
+        segundos = stoi(tiempo.substr(p2 + 1));
+
+        // 3) Restaurante (entre "R:" y "O:")
+        size_t posR = linea.find("R:");
+        size_t posO = linea.find("O:");
+        string restaurante = linea.substr(posR + 2, posO - (posR + 2));
+        // quitar espacios extra al inicio
+        if (!restaurante.empty() && restaurante[0] == ' ') {
+            restaurante = restaurante.substr(1);
         }
-    }
 
-    Orden aux = A[i + 1];
-    A[i + 1] = A[high];
-    A[high] = aux;
+        // 4) Pedido y Costo (después de "O:")
+        string pedidoYCosto = linea.substr(posO + 2);
+        size_t posParA = pedidoYCosto.find("(");
+        size_t posParC = pedidoYCosto.find(")");
 
-    return i + 1;
-}
-
-void quicksort(Orden *A, int low, int high) {
-    if (low < high) {
-        int pivot = partition(A, low, high);
-        quicksort(A, low, pivot - 1);
-        quicksort(A, pivot + 1, high);
-    }
-}
-
-// Arreglo de meses (abreviados en orden)
-const std::string meses[12] = {
-//Enero es el unico con Minuscula en el de Ordenes.txt
-    "ene", "Feb", "Mar", "Abr", "May", "Jun",
-    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
-};
-
-// Función que convierte un string de mes a número (1-12)
-int mesAEntero(const std::string& mes) {
-    for (int i = 0; i < 12; i++) {
-        if (meses[i] == mes) {
-            return i + 1; // +1 porque los arrays empiezan en 0
+        string pedido = pedidoYCosto.substr(0, posParA);
+        if (!pedido.empty() && pedido[0] == ' ') {
+            pedido = pedido.substr(1);
         }
+        int costo = stoi(pedidoYCosto.substr(posParA + 1, posParC - posParA - 1));
+
+        // 5) Crear la orden
+        Orden o(mes, dia, hora, minuto, segundos, restaurante, pedido, costo);
+        ordenes[count] = o;
+        count++;
     }
-    return -1; // si no se encuentra
+
+    return count;
 }
 
-int main (){
-  //Aun no es necesario de mayor a menor
-  int i, opcion, n;
-do{
-  //Menu
-  cout << "\nOrdenes de Restaurantes Situacion Problema" << endl;
-  cout << "1.- Ver Primeros 10 Elementos" << endl;
-  cout << "2.- Buscar Elementos en Cierta Fecha"<< endl;
-  cout << "0.- Salir"<< endl;
-  cout << "Opcion: ";
-  cin >> opcion;
+// Main
+int main() {
+    const int MAX_ORDENES = 10000;
+    Orden ordenes[MAX_ORDENES];
+    int totalOrdenes = leerOrdenes("orders.txt", ordenes, MAX_ORDENES);
 
-  if(opcion == 0){
-    cout << "\nSaliendo del Programa..." << endl;
-    break;
+    cout << "Se cargaron " << totalOrdenes << " ordenes.\n";
 
-    switch(opcion){
-      case 1:
-      cout << "Imprimir 10 primeros datos ya ordenados" << endl;
-      break;
-      case 2: 
-      cout << "Ordenar los datos" << endl;
-      break;
-      default:
-      cout << "Opcion no valida." << endl;
+    // Probar: imprimir las primeras 3
+    for (int i = 0; i < 10 && i < totalOrdenes; i++) {
+        cout << ordenes[i].show() << endl;
     }
-  }
-} while(opcion != 0);
+
+    return 0;
 }
